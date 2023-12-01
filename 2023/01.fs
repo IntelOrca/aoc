@@ -24,9 +24,12 @@ let tokenList =
     | A -> numericDigits
     | B -> numericDigits @ wordDigits
 
-let parseToken token s =
-    let head = s |> List.truncate (List.length token)
-    head = token
+let rec parseToken token s =
+    match token, s with
+    | [], _ -> true
+    | _, [] -> false
+    | x :: xs, y :: ys when x = y -> parseToken xs ys
+    | _ -> false
 
 let parse tokens s =
     tokens
