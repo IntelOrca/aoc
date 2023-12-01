@@ -7,7 +7,7 @@ let toChars (s: string) = s.ToCharArray() |> Array.toList
 
 let readInput path =
     System.IO.File.ReadAllLines(path)
-    |> Array.filter (fun x -> x.Trim().Length <> 0)
+    |> Array.filter (System.String.IsNullOrWhiteSpace >> not)
     |> Array.map toChars
     |> Array.toList
 
@@ -16,7 +16,8 @@ let numericDigits =
     |> List.map (fun x -> (x |> string |> toChars, x))
 let wordDigits =
     [ "one"; "two"; "three"; "four"; "five"; "six"; "seven"; "eight"; "nine" ]
-    |> List.mapi (fun i s -> (s |> toChars, i + 1))
+    |> List.map toChars
+    |> List.mapi (fun i s -> (s, i + 1))
 
 let tokenList =
     match part with
@@ -42,15 +43,17 @@ let rec findToken tokens s =
 
 let findTokenFront = findToken tokenList
 let findTokenBack s =
-    tokenList
-    |> List.map (fun (s, i) -> (List.rev s, i))
-    |> findToken (s |> List.rev)
+    let revTokenList =
+        tokenList
+        |> List.map (fun (s, i) -> (List.rev s, i))
+    s
+    |> List.rev
+    |> findToken revTokenList
 
-let isDigit = System.Char.IsDigit
 let convertString (s: char list) =
-    let first = findTokenFront s |> Option.get
-    let last = findTokenBack s |> Option.get
-    int (string first + string last)
+    let first = findTokenFront s |> Option.get |> string
+    let last = findTokenBack s |> Option.get |> string
+    first + last |> int
 
 let inputPath =
     match part with
