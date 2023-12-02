@@ -1,15 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="top.fs" />
     <Compile Include="2022/*.fs" />
     <Compile Include="2023/*.fs" />
     <Compile Include="bottom.fs" />
   </ItemGroup>
-
 </Project>
