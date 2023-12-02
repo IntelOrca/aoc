@@ -54,8 +54,8 @@ let checkGames bag =
 let getGamePower =
     snd
     >> List.collect id
-    >> List.groupBy (fun (_, col) -> col)
-    >> List.map (fun (col, cubes) -> cubes |> List.map fst |> List.max)
+    >> List.groupBy snd
+    >> List.map (snd >> List.map fst >> List.max)
     >> List.reduce (*)
 let getGamePowerSum = List.map getGamePower >> List.sum
 
