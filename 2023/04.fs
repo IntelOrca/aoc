@@ -79,7 +79,7 @@ let rec processGames score cards =
         processGames (score + multiplier) newCards
 
 let solvePart1 = List.map getScore >> List.sum
-let solvePart2 cards = processGames 0 cards
+let solvePart2 = processGames 0
 
 [<aoc.Solution(2023, 4)>]
 let day04 () =
