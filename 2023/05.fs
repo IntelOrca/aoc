@@ -6,9 +6,10 @@ type Remap = {
     len: int64
 }
 
+type Transformer = int64 -> int64
 type Config = {
     seeds: int64 list
-    maps: Remap list list
+    transformer: Transformer
 }
 
 module String =
@@ -38,12 +39,30 @@ let rec parse acc lines =
         parse (section :: acc) remaining
     | _ -> acc
 
-let createMap input =
-    input
-    |> List.choose (fun input ->
-        match input with
-        | [dst; src; len] -> Some { dst = dst; src = src; len = len }
-        | _ -> None)
+let createSubTransformer input =
+    match input with
+    | [dst; src; len] ->
+        fun i ->
+            if i >= src && i < src + len then
+                Some (dst + (i - src))
+            else
+                None
+    | _ -> fun _ -> None
+
+let createTransformer input =
+    let subTransformers =
+        input
+        |> List.map createSubTransformer
+        |> List.append [fun i -> Some i]
+    fun i ->
+        subTransformers
+        |> List.pick (fun t -> t i)
+
+let createRootTransformer input =
+    fun i ->
+        input
+        |> List.map createTransformer
+        |> List.fold (fun j f -> f j) i
 
 let getConfig sections =
     let seeds =
@@ -51,12 +70,12 @@ let getConfig sections =
         |> List.find (fun (heading, _) -> heading = "seeds:")
         |> snd
         |> List.head
-    let maps =
+    let transformer =
         sections
         |> List.filter (fun (heading, _) -> heading <> "seeds:")
         |> List.map snd
-        |> List.map createMap
-    { seeds = seeds; maps = maps }
+        |> createRootTransformer
+    { seeds = seeds; transformer = transformer }
 
 let readInput =
     System.IO.File.ReadAllLines
@@ -66,47 +85,16 @@ let readInput =
     >> List.rev
     >> getConfig
 
-let tryRemap input remap =
-    if input >= remap.src && input < remap.src + remap.len then
-        Some (remap.dst + (input - remap.src))
-    else
-        None
-
-let getRemap input remap =
-    match remap |> List.tryPick (tryRemap input) with
-    | Some output -> output
-    | None -> input
-
-let getLocation config seed =
-    let rec pipe rem input =
-        match rem with
-        | head :: tail ->
-            pipe tail (head |> getRemap input)
-        | _ -> input
-    pipe config.maps seed
-
 let solvePart1 config =
     config.seeds
-    |> List.map (getLocation config)
+    |> List.map config.transformer
     |> List.min
 
 let solvePart2 config =
-    let ranges =
-        config.seeds
-        |> List.chunkBySize 2
-    let mutable result = System.Int64.MaxValue
-    for range in ranges do
-        let [rangeStart: int64; len] = range
-        let rangeEnd = rangeStart + len
-        let mutable i = rangeStart
-        while i < rangeEnd do
-            let l = getLocation config i
-            if l < result then
-                result <- l
-    result
+    solvePart1 config
 
 [<aoc.Solution(2023, 5)>]
 let day05 () =
-    let config = readInput "data/2023/input05.txt"
+    let config = readInput "data/2023/sample05.txt"
     config |> solvePart1 |> printfn "%d"
     config |> solvePart2 |> printfn "%d"
