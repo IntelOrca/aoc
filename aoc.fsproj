@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="top.fs" />
+    <Compile Include="2020/*.fs" />
     <Compile Include="2022/*.fs" />
     <Compile Include="2023/*.fs" />
     <Compile Include="bottom.fs" />
