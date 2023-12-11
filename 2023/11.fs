@@ -5,30 +5,31 @@ let readInput =
     >> List.ofArray
     >> List.filter (System.String.IsNullOrWhiteSpace >> not)
     >> List.map (fun s -> s.ToCharArray() |> List.ofArray)
-    >> List.mapi (fun y row -> row |> List.mapi (fun x tile -> ((x, y), tile)))
+    >> List.mapi (fun y row -> row |> List.mapi (fun x tile -> ((int64 x, int64 y), tile)))
     >> List.collect id
     >> List.filter (fun ((x, y), t) -> t = '#')
     >> List.map fst
 
-let expand universe =
+let expand multiplier universe =
     let expandAxis f f2 universe =
         let size = universe |> List.map f |> List.max
         let empty =
-            [0..size - 1]
+            [0L..size - 1L]
             |> List.filter(fun i ->
                 universe
                 |> List.exists (fun pos -> f pos = i)
                 |> not)
         let transform pos =
-            match empty |> List.tryFindIndex (fun i -> i > f pos) with
-            | Some amount -> pos |> f2 (f pos + amount)
-            | None -> pos
+            let amount =
+                empty
+                |> List.filter (fun i -> i < f pos)
+                |> List.length
+                |> int64
+            pos |> f2 (f pos + (amount * (multiplier - 1L)))
         universe |> List.map transform
-    let setX = fun v (x, y) -> (v, y)
-    let setY = fun v (x, y) -> (x, v)
     universe
-    |> expandAxis fst setX
-    |> expandAxis snd setY
+    |> expandAxis fst (fun v (x, y) -> (v, y))
+    |> expandAxis snd (fun v (x, y) -> (x, v))
 
 let getPairs universe =
     universe
@@ -49,19 +50,16 @@ let measureLengths universe =
     |> List.map getDistance
     |> List.sum
 
-let solvePart1 universe =
-    universe
-    |> expand
-    |> measureLengths
-
-let solvePart2 = solvePart1
+let solvePart multiplier = expand multiplier >> measureLengths
+let solvePart1 = solvePart 2
+let solvePart2 = solvePart 1000000
 
 let solve input =
     let universe = readInput input
-    universe |> solvePart1 |> printfn "%A"
-    universe |> solvePart2 |> printfn "%A"
+    universe |> solvePart1 |> printfn "%d"
+    universe |> solvePart2 |> printfn "%d"
 
 [<aoc.Solution(2023, 11)>]
 let day06 () =
     solve "data/2023/sample11.txt"
-    // solve "data/2023/input11.txt"
+    solve "data/2023/input11.txt"
